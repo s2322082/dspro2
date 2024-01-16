@@ -53,3 +53,43 @@ for date, temperature in temperature_data2:
 print("\n2つ目のURLの降水量データ:")
 for date, precipitation in precipitation_data2:
     print(f"{date}: {precipitation}mm")
+
+    def create_database():
+     with sqlite3.connect('weather_data.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS temperature (
+                date TEXT PRIMARY KEY,
+                temperature TEXT
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS rainfall (
+                date TEXT PRIMARY KEY,
+                pressure TEXT
+            )
+        ''')
+def insert_data_into_database(data, table_name):
+    with sqlite3.connect('weather_data.db') as conn:
+        cursor = conn.cursor()
+        cursor.executemany(f'INSERT OR IGNORE INTO {table_name} VALUES (?, ?)', data)
+def read_data_from_database(table_name):
+    with sqlite3.connect('weather_data.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute(f'SELECT * FROM {table_name}')
+        return cursor.fetchall()
+# メインプログラム
+def main():
+    create_database()
+    # 1つ目からデータを取得
+    url1 = 'https://www.data.jma.go.jp/stats/etrn/view/daily_a1.php?prec_no=44&block_no=0371&year=2023&month=12&day=&view=p1'
+    temperature_data1, rainfall_data1 = scrape_weather_data(url1)
+    insert_data_into_database(temperature_data1, 'temperature')
+    insert_data_into_database(rainfall_data1, 'rainfall')
+    # 2つ目からデータを取得
+    url2 = 'https://www.data.jma.go.jp/stats/etrn/view/daily_a1.php?prec_no=44&block_no=0371&year=2024&month=01&day=&view=p1'
+    temperature_data2, rainfall_data2 = scrape_weather_data(url2)
+    insert_data_into_database(temperature_data2, 'temperature')
+    insert_data_into_database(rainfall_data2, 'rainfall')
+if __name__ == "__main__":
+    main()
